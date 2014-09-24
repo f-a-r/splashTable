@@ -1,0 +1,46 @@
+Part 1.
+
+Compilation:
+		javac splash.java
+Execution:
+		java splash B R S h inputfile [dumpfile] < probefile > resultfile
+		Note: If dumpfile not given, a default dumpfile name is chosen.
+
+Related files:	(SEE COMMENTS IN CODE FOR FURTHRE DETAILS)	
+		splash.java
+			Contains I/O code for taking in command line arguments
+			of B,R,S,h, inputfile name, optional dumpfile name.
+			and reading and writing to stdin and stdout.
+			Note: Even if build does not fail, as soon as EOF is reached
+			a dumpfile is created. This is for executing Part 2.
+
+		SplashTable.java
+			Contains the main data structure and algorithms
+			for the splash table as described in the reference
+			document.
+	
+		Entry.java
+			Contains the data (with getters and setters) of
+			entries in the splash table. An entry simply consists of
+			a key and a payload.
+
+
+Part2.
+
+COMPILATION:
+
+	To compile the code you just need to type 'make' in the related directory
+
+EXCECUTION:
+	./probe dumpfile <probefile> resultfile
+
+RELATED FILES: (SEE COMMENTS IN CODE FOR FURTHRE DETAILS)
+	finalProbe.c
+
+	In this file we are reading a dumpfile from part 1 which must include a splashTable with B=4 and h =2. All keys and payloads as well as hash multipliers are thought to be non-negative 32 bit integers as stated in Piazza.
+	In general, the code reads the first line from dumpfile and checks for valid number of arguments in the first line and checks whether (B=4 and h=2), if so it carries on to next line to read the two hash multipliers and saves them in two global variables to be used later in probe function.
+	"Error: Invalid data" message is thrown if other than 2 multipliers are provided or number of arguments in the first line is less than 4.
+	Next it will rebuild the splashTable which was dumped from part1. It saves keys of each bucket in an array of size of 4 and saves the associated payloads of each bucket in another array of size 4. So later in probe function we can create contiguous keys and payloads using these arrays. When the splashTable is reconstructed we read the searchKeys from standard input( presumably you should provide a probefile as well as a resultfile). We read keys from standard input one by one and for each key, we call the probe functions. We pass the search key as well as the SplashTable to that function to check whether this searchKey is present in the SplashTable or not. All instructions in probe function are SIMD instructions.Mainly we used set, setr, load for copying data into _m128i registers so that we can do parallel computations, such as probing 4 keys of a bucket against  4 copies of a search key saved in a _128 variable in parallel. In case we want to access packed 32 bit integers of a _m128i register, we use store SIMDs. Multiplication, compareEqual, AND and OR are pretty standrad and straight forward to use after the copying and saving of the  data into correct register size and type(ie integer) are done correctly. For Or-Across we followed what professor has said in Piazza, so we do Or-Across in multiple steps and finally we get a _128 variable for which each of its packed 32 bit integers holds the same value and this value is in fact the associated payload for the search key. If it was present in the table, we return the payload (or 0). In case returned payload from probe function is not 0 (i.e. the search key was present in the splashTable) we print the search key and its associated payload to the resultfile or to the terminal. For better understanding of this process each step of the code has been well commented.
+	The code throws some warnings which does not affect the performance of the program.
+
+     
